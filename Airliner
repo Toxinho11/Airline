@@ -1,0 +1,110 @@
+from abc import ABC, abstractmethod
+
+# --- Járat osztályok ---
+class Jarat(ABC):
+    def __init__(self, jaratszam, celallomas, jegyar):
+        self.jaratszam = jaratszam
+        self.celallomas = celallomas
+        self.jegyar = jegyar
+
+    @abstractmethod
+    def info(self):
+        pass
+
+class BelfoldiJarat(Jarat):
+    def info(self):
+        return f"Belföldi Járat - Szám: {self.jaratszam}, Cél: {self.celallomas}, Ár: {self.jegyar} Ft"
+
+class NemzetkoziJarat(Jarat):
+    def info(self):
+        return f"Nemzetközi Járat - Szám: {self.jaratszam}, Cél: {self.celallomas}, Ár: {self.jegyar} Ft"
+
+# --- Légitársaság ---
+class LegiTarsasag:
+    def __init__(self, nev):
+        self.nev = nev
+        self.jaratok = []
+
+    def jarat_hozzaadas(self, jarat):
+        self.jaratok.append(jarat)
+
+    def jaratok_listazasa(self):
+        return [jarat.info() for jarat in self.jaratok]
+
+    def keres_jarat(self, jaratszam):
+        return next((j for j in self.jaratok if j.jaratszam == jaratszam), None)
+
+# --- JegyFoglalás ---
+class JegyFoglalas:
+    def __init__(self):
+        self.foglalasok = {}
+
+    def foglalas(self, jarat):
+        if jarat.jaratszam in self.foglalasok:
+            return "Már létezik foglalás erre a járatra."
+        self.foglalasok[jarat.jaratszam] = jarat
+        return f"Foglalás sikeres! Ár: {jarat.jegyar} Ft"
+
+    def lemondas(self, jaratszam):
+        if jaratszam in self.foglalasok:
+            del self.foglalasok[jaratszam]
+            return "Foglalás lemondva."
+        return "Nincs ilyen foglalás."
+
+    def listazas(self):
+        if not self.foglalasok:
+            return ["Nincsenek foglalások."]
+        return [jarat.info() for jarat in self.foglalasok.values()]
+
+# --- Előkészítés ---
+def rendszer_inditas():
+    lt = LegiTarsasag("Magyar Air")
+    j1 = BelfoldiJarat("B101", "Debrecen", 12000)
+    j2 = BelfoldiJarat("B102", "Pécs", 10000)
+    j3 = NemzetkoziJarat("N201", "Berlin", 35000)
+
+    for jarat in [j1, j2, j3]:
+        lt.jarat_hozzaadas(jarat)
+
+    jf = JegyFoglalas()
+    jf.foglalas(j1)
+    jf.foglalas(j2)
+    jf.foglalas(j3)
+
+    return lt, jf
+
+# --- Felhasználói felület ---
+def menu():
+    lt, jf = rendszer_inditas()
+    while True:
+        print("\n1. Jegy foglalása\n2. Foglalás lemondása\n3. Foglalások listázása\n4. Járatok listázása\n0. Kilépés")
+        valasztas = input("Válassz egy műveletet: ")
+
+        if valasztas == "1":
+            jaratszam = input("Add meg a járatszámot: ")
+            jarat = lt.keres_jarat(jaratszam)
+            if jarat:
+                print(jf.foglalas(jarat))
+            else:
+                print("Nincs ilyen járat.")
+
+        elif valasztas == "2":
+            jaratszam = input("Add meg a törlendő foglalás járatszámát: ")
+            print(jf.lemondas(jaratszam))
+
+        elif valasztas == "3":
+            for f in jf.listazas():
+                print(f)
+
+        elif valasztas == "4":
+            for j in lt.jaratok_listazasa():
+                print(j)
+
+        elif valasztas == "0":
+            print("Kilépés...")
+            break
+        else:
+            print("Érvénytelen választás.")
+
+if __name__ == "__main__":
+    menu()
